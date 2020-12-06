@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info">
+
+  <Properties>
+    <property name="log.path" value="${sys:logs.base}"/>
+    <property name="app.name" value="gateway-console"/>
+    <property name="LOGGER_LEVEL">debug</property>
+    <property name="immediateFlush" value="true"/>
+  </Properties>
+
+  <Appenders>
+
+    <RollingRandomAccessFile name="APP" fileName="${log.path}/app.log" filePattern="${log.path}/app.log.%d{yyyy-MM-dd}_%i"
+      immediateFlush="${immediateFlush}">
+      <PatternLayout>
+        <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %5p %c{1}.%M:%L - %m^|%X{traceId}^|%X{clientId}%n</pattern>
+      </PatternLayout>
+      <Policies>
+        <!--按天进行分割日志-->
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+        <!--按文件占用空间进行分割日志 KB MB-->
+        <SizeBasedTriggeringPolicy size="500 MB"/>
+      </Policies>
+      <!-- 同类型文件最多创建20个 i的最大值-->
+      <DefaultRolloverStrategy max="20"/>
+    </RollingRandomAccessFile>
+
+    <RollingRandomAccessFile name="THEMIS-STAT" fileName="${log.path}/sdk/themis-stat-sdk.log" filePattern="${log.path}/sdk/themis-stat-sdk.log.%d{yyyy-MM-dd}"
+      immediateFlush="${immediateFlush}">
+      <!-- 只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）可以使用多个ThresholdFilter 达到精准过滤某个级别的日志-->
+      <ThresholdFilter level="${LOGGER_LEVEL}" onMatch="ACCEPT" onMismatch="DENY" />
+      <PatternLayout>
+        <pattern>%m%n</pattern>
+      </PatternLayout>
+      <Policies>
+        <!-- 按天滚动切割 -->
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+      </Policies>
+    </RollingRandomAccessFile>
+
+    <Console name="console" target="SYSTEM_OUT">
+      <PatternLayout   pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %5p %c{1}.%M:%L - %m^|%X{traceId}^|%X{clientId}%n" />
+    </Console>
+
+  </Appenders>
+
+  <Loggers>
+
+    <!--异步模式下，默认情况不会输出位置信息，因为输出位置信息会慢30-100倍。
+    如果需要位置信息，需要在所有相关记录器（包括根记录器）的配置中设置“includeLocation = true”。
+    如类名.方法名.行号
+    -->
+    <AsyncLogger name="com.example" level="debug" additivity="false" includeLocation = "true">
+      <appender-ref ref="APP"/>
+      <appender-ref ref="console"/>
+    </AsyncLogger>
+
+
+    <AsyncLogger name="THEMIS-STAT" level="info" additivity="false" includeLocation="false">
+      <appender-ref ref="THEMIS-STAT"/>
+    </AsyncLogger>
+    <AsyncLogger name="org.springframework" level="debug"/>
+    <!--<logger name="org.springframework.cloud.gateway" level="DEBUG"/>-->
+    <!--<logger name="org.springframework.http.server.reactive" level="DEBUG"/>-->
+    <!--<logger name="org.springframework.web.reacatewayPluginConfig.java
+tive" level="DEBUG"/>-->
+    <!--<logger name="reactor.ipc.netty" level="DEBUG"/>-->
+    <AsyncLogger name="reactor.netty" level="debug" />
+
+    <AsyncRoot level="debug" includeLocation = "true">
+      <appender-ref ref="console"/>
+      <appender-ref ref="APP" />
+    </AsyncRoot>
+
+  </Loggers>
+
+</Configuration>

@@ -1,0 +1,57 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 30s
+      plugin:
+        config:
+          log-request: true #this setting will decide request response log
+          read-request-data-service-id-list:  #set specific serviceId from discover to read request Data
+            - themis
+            #- boot
+          read-request-data-path-list:        #set specific path to read request data
+            - /themis/ping/**
+          read-request-data: false # this setting will read all request data
+          read-response-data: false # this setting will read all response data
+      routes:
+        - id: themis
+          uri: https://themis-dev.jiaoyanyun.com:443
+          predicates:
+            # 匹配路径转发
+            - Path=/themis/**
+          filters:
+            - StripPrefix=1
+        - id: demo
+          uri: lb://demo-provider
+          predicates:
+            # 匹配路径转发
+            - Path=/demo/**
+          filters:
+            - StripPrefix=1
+##设置hystrix的熔断时间
+#hystrix:
+#  command:
+#    default:
+#      execution:
+#        isolation:
+#          strategy:
+#          thread: SEMAPHORE
+#            #设置API网关中路由转发请求的HystrixCommand执行超时时间
+#            timeoutInMilliseconds: 3000
+#            maxConcurrentRequests: 30000
+
+hystrix.command.default.fallback.enabled: true
+hystrix.command.default.circuitBreaker.enabled: true
+hystrix.command.default.execution.isolation.strategy: SEMAPHORE
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds: 8000
+hystrix.command.default.execution.isolation.semaphore.maxConcurrentRequests: 1000
+
+hystrix.command.bootFallbackCmd.fallback.enabled: true
+hystrix.command.bootFallbackCmd.circuitBreaker.enabled: true
+hystrix.command.bootFallbackCmd.execution.isolation.strategy: SEMAPHORE
+hystrix.command.bootFallbackCmd.execution.isolation.thread.timeoutInMilliseconds: 3000
+hystrix.command.bootFallbackCmd.execution.isolation.semaphore.maxConcurrentRequests: 1000
